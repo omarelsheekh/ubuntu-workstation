@@ -1,0 +1,25 @@
+{
+    "variables": {
+        "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+        "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+        "region": "eu-west-2"
+    },
+    "builders": [
+        {
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "{{user `region`}}",
+            "ami_name": "oelsheekh-workstation",
+            "instance_type": "c5.xlarge",
+            "type": "amazon-ebs",
+            "source_ami": "ami-0194c3e07668a7e36",
+            "ssh_username": "ubuntu"
+        }
+    ],
+    "provisioners": [
+        {
+          "type": "ansible",
+          "playbook_file": "./ansible-playbook.yml"
+        }
+    ]
+}

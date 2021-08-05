@@ -1,0 +1,103 @@
+---
+
+- hosts: default
+  become: true
+  gather_facts: no
+
+  tasks:
+    - name: install GNOME desktop vanilla version
+      apt:
+        name: [gnome-session, gdm3, gnome-software, gnome-system-monitor, nautilus]
+        state: latest
+        update_cache: yes
+    
+    # - name: reboot the machine
+    #   reboot:
+
+    - name: install (RDP) server
+      apt:
+        name: xrdp
+        state: latest
+
+    - name: enable service xrdp and ensure it is started
+      systemd:
+        name: xrdp
+        enabled: yes
+        state: started
+
+    - name: Allow all access to tcp port 3389
+      ufw:
+        rule: allow
+        port: 3389
+        proto: tcp
+
+    - name: install useful packages 
+      apt:
+        name: [firefox, apt-transport-https, ca-certificates, curl, gnupg, lsb-release, software-properties-common]
+        state: latest
+
+    - name: Add Docker’s official GPG key
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: set up the docker stable repository
+      shell: |
+        echo \
+        "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    - name: Install Docker Engine
+      apt:
+        name: [docker-ce, docker-ce-cli, containerd.io]
+        state: latest
+        update_cache: yes
+
+    - name: Verify that Docker Engine is installed correctly by running the hello-world image
+      shell: docker run hello-world
+      register: dockereg
+
+    - name: print previous command output
+      debug:
+        var: dockereg.stdout_lines
+    
+    - name: Add your user to the docker group.
+      shell: "usermod -aG docker ubuntu"
+
+    - name: Download the Google Cloud public signing key
+      shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+    - name: Add the Kubernetes apt repository
+      shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+    - name: install kubectl
+      apt:
+        name: [kubectl]
+        state: latest
+        update_cache: yes
+
+    - name: install helm
+      shell: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+    - name: install minikube
+      shell: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+        sudo dpkg -i minikube_latest_amd64.deb
+
+    - name: Add the HashiCorp GPG key
+      shell: curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+
+    - name: Add the official HashiCorp Linux repository
+      shell: sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+    - name: Update to add the repository, and install the Terraform CLI
+      apt:
+        name: terraform
+        update_cache: yes
+        state: latest
+
+    - name: Install pip
+      shell: |
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        python3 get-pip.py
+
+    - name: install virtualenv, ansible and awscli
+      shell: pip3 install virtualenv awscli ansible
