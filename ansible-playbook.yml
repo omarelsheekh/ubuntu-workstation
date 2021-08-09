@@ -5,14 +5,15 @@
   gather_facts: no
 
   tasks:
-    - name: install GNOME desktop vanilla version
+    - name: Installing Desktop Environment 
       apt:
-        name: [gnome-session, gdm3, gnome-software, gnome-system-monitor, nautilus]
+        name: ubuntu-desktop
         state: latest
         update_cache: yes
     
-    # - name: reboot the machine
-    #   reboot:
+    - name: Update all packages to the latest version
+      apt:
+        upgrade: dist
 
     - name: install (RDP) server
       apt:
@@ -70,7 +71,7 @@
 
     - name: install kubectl
       apt:
-        name: [kubectl]
+        name: kubectl
         state: latest
         update_cache: yes
 
@@ -98,6 +99,8 @@
       shell: |
         curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
         python3 get-pip.py
+      ignore_errors: yes
 
     - name: install virtualenv, ansible and awscli
       shell: pip3 install virtualenv awscli ansible
+      ignore_errors: yes
