@@ -89,11 +89,15 @@
     - name: Add the official HashiCorp Linux repository
       shell: sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 
-    - name: Update to add the repository, and install the Terraform CLI
+    - name: Update to add the repository, and install the Terraform CLI & packer
       apt:
-        name: terraform
+        name: [terraform, packer]
         update_cache: yes
         state: latest
+
+    - name: Obtaining sshuttle
+      apt:
+        name: sshuttle
 
     - name: Install pip
       shell: |
