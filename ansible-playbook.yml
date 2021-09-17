@@ -105,6 +105,6 @@
         python3 get-pip.py
       ignore_errors: yes
 
-    - name: install virtualenv, ansible and awscli
-      shell: pip3 install virtualenv awscli ansible
+    - name: install virtualenv, ansible, docker-compose and awscli
+      shell: pip3 install virtualenv awscli docker-compose ansible
       ignore_errors: yes
