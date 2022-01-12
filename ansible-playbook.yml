@@ -34,7 +34,7 @@
 
     - name: install useful packages 
       apt:
-        name: [zsh, apt-transport-https, ca-certificates, curl, gnupg, lsb-release, software-properties-common]
+        name: [zsh, fonts-powerline, apt-transport-https, ca-certificates, curl, gnupg, lsb-release, software-properties-common]
         state: latest
 
     - name: install chrome
@@ -110,12 +110,22 @@
       ignore_errors: yes
 
     - name: install zsh and use it as the default shell
+      become: false
       shell: |
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-        usermod -s /bin/zsh $USER
+        sudo usermod -s /bin/zsh $USER
+        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+        echo 'eval "$(mcfly init bash)"' >> .bashrc
+        echo 'eval "$(mcfly init zsh)"' >> .zshrc
 
     - name: install mcfly
       shell: |
         curl -LSfs https://raw.githubusercontent.com/cantino/mcfly/master/ci/install.sh | sh -s -- --git cantino/mcfly
-        echo 'eval "$(mcfly init bash)"' >> .bashrc
-        echo 'eval "$(mcfly init zsh)"' >> .zshrc
+    
+    - name: edit zsh plugins
+      ignore_errors: yes
+      become: false
+      ansible.builtin.lineinfile:
+        path: ~/.zshrc
+        regexp: '^plugins=('
+        line: plugins=(git aws docker helm kubectl minikube zsh-autosuggestions)
