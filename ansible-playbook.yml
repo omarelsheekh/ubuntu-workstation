@@ -34,17 +34,21 @@
 
     - name: install useful packages 
       apt:
-        name: [firefox, apt-transport-https, ca-certificates, curl, gnupg, lsb-release, software-properties-common]
+        name: [zsh, apt-transport-https, ca-certificates, curl, gnupg, lsb-release, software-properties-common]
         state: latest
 
-    - name: Add Docker’s official GPG key
-      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    - name: install chrome
+      shell: |
+        curl -o chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install ./chrome.deb
 
     - name: set up the docker stable repository
       shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
         echo \
-        "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
         $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 
     - name: Install Docker Engine
       apt:
@@ -61,7 +65,7 @@
         var: dockereg.stdout_lines
     
     - name: Add your user to the docker group.
-      shell: "usermod -aG docker ubuntu"
+      shell: "usermod -aG docker $USER"
 
     - name: Download the Google Cloud public signing key
       shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -95,16 +99,23 @@
         update_cache: yes
         state: latest
 
-    - name: Obtaining sshuttle
-      apt:
-        name: sshuttle
-
     - name: Install pip
       shell: |
         curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
         python3 get-pip.py
       ignore_errors: yes
 
-    - name: install virtualenv, ansible, docker-compose and awscli
-      shell: pip3 install virtualenv awscli docker-compose ansible
+    - name: install virtualenv, ansible, docker-compose, sshuttle, tldr and awscli
+      shell: pip3 install virtualenv awscli docker-compose ansible sshuttle tldr
       ignore_errors: yes
+
+    - name: install zsh and use it as the default shell
+      shell: |
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        usermod -s /bin/zsh $USER
+
+    - name: install mcfly
+      shell: |
+        curl -LSfs https://raw.githubusercontent.com/cantino/mcfly/master/ci/install.sh | sh -s -- --git cantino/mcfly
+        echo 'eval "$(mcfly init bash)"' >> .bashrc
+        echo 'eval "$(mcfly init zsh)"' >> .zshrc
